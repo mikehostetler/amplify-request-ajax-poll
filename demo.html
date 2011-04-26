@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Amplify Request Ajax Polling</title>
+	<script src="external/json2.js"></script>
+	<script src="external/jquery-1.5.2.js"></script>
+	<script src="external/amplify.core.js"></script>
+	<script src="external/amplify.request.js"></script>
+	<script src="amplify.request.ajax-poll.js"></script>
+	<script>
+	$(function() {
+
+	var log = $( "#log" ),
+		pause = $( "#pause" );
+
+	amplify.request.define( "test", "ajax-poll", {
+		url: "poll.php",
+		dataType: "json",
+		frequency: 2000
+	});
+
+	var request = amplify.request( "test", function( data ) {
+		log.prepend( "<p>" + data + "</p>" );
+	});
+
+	amplify.subscribe( "request.before", function() {
+		return !pause.is( ":checked" );
+	});
+
+	$( "#abort" ).click(function() {
+		request.abort();
+	});
+
+	});
+	</script>
+</head>
+<body>
+
+<input type="checkbox" id="pause" name="pause"><label for="pause">pause</label>
+<button id="abort">abort</button>
+
+<div id="log"></div>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Amplify Request Ajax Polling</title>
+</head>
+<body>
+
+<h1>Amplify Request Ajax Polling</h1>
+
+<h2>Overview</h2>
+
+<p>This is a sample implementation of ajax polling with amplify.request.</p>
+
+<p>This implementation was written with the goal of providing the same exact API
+for standard ajax requests and ajax polling requests. The idea was to have the
+only difference be that the success or error callbacks would be invoked multiple
+times (once for every poll). This implementation of polling is mostly just a
+wrapper around the existing ajax implementation to reduce the amount of code needed.</p>
+
+<p>The main problem with this implementation is that all of the request messages
+have the wrong resource ID. For example, if you define an ajax-poll request with
+a resource ID of "foo" then all of the messages will have a resource ID of "ajax-poll-foo".
+At first we were unsure if this was even a problem; the user should already know
+that they are making a request that will poll, but it still seemed wrong to expose
+this through the resource ID in the messages.</p>
+
+<p>After some more thought, our current thinking is that it's ok for ajax polling
+to publish messages with a different resource ID or even have a slightly differnet API.
+Since the user has to know ahead of time that the request will have multiple responses,
+they will know what to expect even if the API for responses is slightly different.
+While it's ok to expose the fact that the request has multiple responses, we should
+still not expose the fact that the request is using ajax polling.</p>
+
+<p>Since there are several request types that can have multiple respones, such as
+ajax polling, Web Sockets and Server-Sent Events, they should all have a consistent
+API. We have decided to hold off on an official implementaiton of ajax polling until
+we have decided what the common API should be for request types that have multiple
+responses, but we wanted to get this code out in the public to start gathering
+feedback.</p>
+
+<h2>Features</h2>
+
+<dl>
+	<dt>frequency option</dt>
+	<dd>The frequecy option allows you to specify how often to poll (in milliseconds).
+	A frequency of 5000 would start the next ajax request 5 seconds after the previous
+	request completes. If no frequency is provided, the next ajax request will start as
+	soon as the previous request completes.</dd>
+
+	<dt>auto-abort on specific errors</dt>
+	<dd>amplify.request.ajaxPollErrors is a hash of HTTP status codes that should
+	cause the polling to stop. For example, if a request results in a 404, then
+	it will probably always result in a 404 and the polling should stop.</dd>
+
+	<dt>prevent an individual poll</dt>
+	<dd>You can prevent a specific poll from occurring by returning false in the
+	request.before message. This can be useful to essentially pause a request.</dd>
+
+	<dt>stop the polling</dt>
+	<dd>You can call the abort method on the request object returned from amplify.request()
+	to stop the polling.</dd> 
+</dl>
+	
+<h2>Ideas</h2>
+
+<dl>
+	<dt>throttling on errors</dt>
+	<dd>We would like to throttle the frequency of the requests on errors. For example,
+	if the frequency is set to 1000 and the server responds with a status code of 500,
+	we could bump the interval for the next request up to 2000, then 4000, then 8000, etc.
+	When the request eventually returns a successful response, we would go back to the
+	specified frequency of 1000. We could also stop the polling if the request fails
+	too many times in a row.</dd>
+</dl>
+
+<h2>Demo</h2>
+
+<p>Check out the <a href="demo.html">demo</a>.</p>
+
+</body>
+</html>
